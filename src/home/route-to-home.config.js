@@ -1,0 +1,3 @@
+function($routeProvider) {
+    $routeProvider.otherwise('/');
+}

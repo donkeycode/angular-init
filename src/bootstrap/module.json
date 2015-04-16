@@ -1,0 +1,10 @@
+{
+    "requires": [
+        "ngRoute",
+        "ui.router",
+        "angularMoment",
+        "pascalprecht.translate",
+        "dc.common",
+        "dc.home"
+    ]
+}

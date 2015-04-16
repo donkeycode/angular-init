@@ -1,0 +1,5 @@
+{
+    "lang": {
+        "api": "./mocks/lang.json"
+    }
+}
