@@ -156,7 +156,7 @@ gulp.task('ng-index', [clean('lib'), clean('index.html'), 'bower', 'ng-styles', 
         .pipe(ngIndex({
             main: 'dc.bootstrap',
             base: '/',
-            baseTemplate: 'tpl/index.ejs',
+            baseTemplate: 'src/bootstrap/templates/index.ejs',
         }))
         .pipe(gulp.dest('www/'));
 });
