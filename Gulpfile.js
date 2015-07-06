@@ -1,29 +1,30 @@
-var gulp       = require('gulp');
-var ngBuild    = require('ng-build');
-var wiredep    = require('wiredep');
-var bower      = require('bower');
-var queue      = require('streamqueue');
-var del        = require('del');
-var rename     = require('gulp-rename');
-var ngAnnotate = require('gulp-ng-annotate');
-var cache      = require('gulp-cached');
-var plumber    = require('gulp-plumber');
-var remember   = require('gulp-remember');
-var jscs       = require('gulp-jscs');
-var path       = require('path');
+var gulp        = require('gulp');
+var ngBuild     = require('ng-build');
+var wiredep     = require('wiredep');
+var bower       = require('bower');
+var queue       = require('streamqueue');
+var del         = require('del');
+var rename      = require('gulp-rename');
+var ngAnnotate  = require('gulp-ng-annotate');
+var cache       = require('gulp-cached');
+var plumber     = require('gulp-plumber');
+var remember    = require('gulp-remember');
+var jscs        = require('gulp-jscs');
+var path        = require('path');
 var browserSync = require('browser-sync');
 var reload      = browserSync.reload;
+var jshint      = require('gulp-jshint');
 
-var ngBlock    = ngBuild.ngBlock;
-var ngIndex    = ngBuild.ngIndex;
-var ngLint     = ngBuild.ngLint;
-var ngModule   = ngBuild.ngModule;
-var ngProvider = ngBuild.ngProvider;
-var ngStore    = ngBuild.ngStore;
-var ngStyle    = ngBuild.ngStyle;
-var ngTemplate = ngBuild.ngTemplate;
-var ngWire     = ngBuild.ngWire;
-var ngWrap     = ngBuild.ngWrap;
+var ngBlock     = ngBuild.ngBlock;
+var ngIndex     = ngBuild.ngIndex;
+var ngLint      = ngBuild.ngLint;
+var ngModule    = ngBuild.ngModule;
+var ngProvider  = ngBuild.ngProvider;
+var ngStore     = ngBuild.ngStore;
+var ngStyle     = ngBuild.ngStyle;
+var ngTemplate  = ngBuild.ngTemplate;
+var ngWire      = ngBuild.ngWire;
+var ngWrap      = ngBuild.ngWrap;
 
 process.env.ENV = process.env.ENV || 'dev';
 
@@ -101,10 +102,11 @@ gulp.task('ng-scripts', [clean('js'), 'ng-modules', 'ng-templates', 'ng-blocks',
         .pipe(ngWrap())
         .pipe(ngAnnotate())
         .pipe(jscs())
+        .pipe(jshint())
+        .pipe(jshint.reporter())
         .pipe(remember('scripts'))
         .pipe(gulp.dest('www/js/'));
 });
-
 
 gulp.task('ng-lint', ['ng-modules', 'ng-blocks', 'ng-providers'], function() {
     return ngStore.stream()
@@ -113,17 +115,24 @@ gulp.task('ng-lint', ['ng-modules', 'ng-blocks', 'ng-providers'], function() {
         .pipe(ngLint.reporter());
 });
 
-gulp.task('ng-styles', [clean('css')], function() {
-    return gulp
-        .src('src/bootstrap/module.scss')
-        .pipe(plumber())
-        .pipe(ngStyle())
-        .pipe(rename({ basename: 'ionic.app', extname: '.css' }))
+gulp.task('ng-styles', [clean('css'), 'bower'], function() {
+    return queue({ objectMode: true },
+            gulp
+                .src('src/bootstrap/bootstrap.scss')
+                .pipe(plumber())
+                .pipe(ngStyle())
+                .pipe(rename({ basename: 'bootstrap', extname: '.css' })),
+            gulp
+                .src('src/bootstrap/module.scss')
+                .pipe(plumber())
+                .pipe(ngStyle())
+                .pipe(rename({ basename: 'dc', extname: '.css' }))
+        )
         .pipe(gulp.dest('www/css/'))
         .pipe(reload({ stream: true }));
 });
 
-gulp.task('ng-index', [clean('*'), 'bower', 'ng-styles', 'ng-scripts'], function() {
+gulp.task('ng-index', [clean('lib'), clean('index.html'), 'bower', 'ng-styles', 'ng-scripts'], function() {
     var files = wiredep();
     var deps  = Array.prototype.concat(files.js, files.css).filter(Boolean);
 
@@ -138,20 +147,22 @@ gulp.task('ng-index', [clean('*'), 'bower', 'ng-styles', 'ng-scripts'], function
 
                 .pipe(gulp.dest('www/')),
             gulp.src([
-                'www/css/**/*.css',
+                'www/css/bootstrap.css',
+                'www/css/dc.css',
                 'www/js/**/*.js'
             ], { read: false, base: 'www' })
         )
         .pipe(plumber())
         .pipe(ngIndex({
             main: 'dc.bootstrap',
-            base: '/'
+            base: '/',
+            baseTemplate: 'tpl/index.ejs',
         }))
         .pipe(gulp.dest('www/'));
 });
 
 gulp.task('images', [clean('img')], function() {
-    gulp.src('src/**/*.{png,jpg,jpeg,gif}')
+    return gulp.src('src/**/*.{png,jpg,jpeg,gif,ico}')
         .pipe(plumber())
         .pipe(rename(function(img) {
             img.dirname = img.dirname.replace(/img|images/, '');
@@ -161,13 +172,13 @@ gulp.task('images', [clean('img')], function() {
 });
 
 gulp.task('mocks', [clean('mocks')], function() {
-    gulp.src('mocks/**/*')
+    return gulp.src('mocks/**/*')
         .pipe(plumber())
         .pipe(gulp.dest('www/mocks'));
 });
 
 gulp.task('fonts', ['bower'], function() {
-    gulp.src('bower_components/**/fonts/**/*')
+    return gulp.src('bower_components/**/fonts/**/*')
         .pipe(plumber())
         .pipe(rename({ dirname: '' }))
         .pipe(gulp.dest('www/fonts/'));
@@ -192,5 +203,5 @@ gulp.task('dev', ['build', 'serve'], function() {
     gulp.watch('mocks/**/*', ['mocks']);
     gulp.watch('src/**/*.scss', ['ng-styles']);
     gulp.watch('src/**/*.{html,js,json}', ['ng-scripts', reload]);
-    gulp.watch('src/**/*.{png,jpg,jpeg,gif}', ['images']);
+    gulp.watch('src/**/*.{png,jpg,jpeg,gif,ico}', ['images']);
 });
