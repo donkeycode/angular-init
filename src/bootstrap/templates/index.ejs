@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="fr" ng-app="<%= main %>" ng-strict-di id="ng-app">
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DC app</title>
+        <link rel="shortcut icon" type="image/x-icon" href="img/common/favicon.ico" />
+<% if (base) {
+%>        <base href="<%= base %>">
+<% } %><% styles.forEach(function(href) {
+%>        <link rel="stylesheet" href="<%= href %>">
+<% }) %>
+<% scripts.forEach(function(src) {
+%>        <script src="<%= src %>"></script>
+<% }) %>    </head>
+    <body>
+        <div ui-view></div>
+    </body>
+</html>
