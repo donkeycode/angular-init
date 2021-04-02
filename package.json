@@ -17,7 +17,7 @@
     "gulp-remember": "^0.3.0",
     "gulp-rename": "^1.2.2",
     "ng-build": "^0.1.10",
-    "path": "^0.11.14",
+    "path": "^0.12.7",
     "streamqueue": "^1.1.0",
     "wiredep": "^3.0.0-beta"
   }
